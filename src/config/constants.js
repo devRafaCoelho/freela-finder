@@ -8,10 +8,11 @@ export const DEFAULT_SEARCH_VALUES = {
   keyword: '',
   strictMode: true,
   prioritizeFreela: true,
+  // Só remove full-time/CLT explícito — não descarta todo job board
   excludeFullTime: true,
   region: 'remote',
-  maxAgeDays: 14,
+  maxAgeDays: 45,
   sources: FREELA_FIRST_SOURCE_IDS,
-  minMatchScore: 25,
+  minMatchScore: 15,
   pitchTemplate: '',
 };

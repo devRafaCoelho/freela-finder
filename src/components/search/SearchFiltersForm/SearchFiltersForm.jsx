@@ -76,7 +76,7 @@ export function SearchFiltersForm({ form, onSubmit, loading }) {
               onChange={(e) => setValue('excludeFullTime', e.target.checked)}
             />
           }
-          label="Excluir vagas CLT / full-time"
+          label="Excluir full-time / CLT explícito (mantém contratos e indefinidos)"
         />
         <FormControlLabel
           control={
@@ -87,6 +87,9 @@ export function SearchFiltersForm({ form, onSubmit, loading }) {
           }
           label="Modo estrito (descarta anúncios sem stack incluída)"
         />
+        <Typography variant="caption" color="text.secondary">
+          Dica: se vier pouco resultado, desligue o modo estrito ou aumente a idade máxima.
+        </Typography>
         <SourceCheckboxGroup
           value={values.sources}
           onChange={(v) => setValue('sources', v)}

@@ -1,12 +1,11 @@
 import { wordMatch } from '../utils/textMatch';
 
-const JOB_BOARD_SOURCES = ['remoteok', 'remotive', 'arbeitnow'];
-
 const EXPLICIT_FREELANCE_TERMS = [
   'freelance',
   'freelancer',
   'freela',
   'contractor',
+  'contract',
   'part-time',
   'part time',
   'gig',
@@ -17,26 +16,23 @@ const EXPLICIT_FREELANCE_TERMS = [
   'short term',
   'hourly',
   'por hora',
+  'consultoria',
 ];
 
-const FREELANCE_TERMS = [
-  ...EXPLICIT_FREELANCE_TERMS,
+const INTENT_FREELANCE_TERMS = [
   'preciso de dev',
   'preciso de um dev',
   'preciso de desenvolvedor',
   'busco desenvolvedor',
   'busco dev',
   'contratar programador',
-  'consultoria',
   'mvp',
 ];
 
-const EMPLOYMENT_TERMS = [
+const STRONG_EMPLOYMENT_TERMS = [
   'full-time',
   'full time',
   'permanent',
-  'staff engineer',
-  'staff software',
   'clt',
   'benefits',
   'health insurance',
@@ -45,34 +41,13 @@ const EMPLOYMENT_TERMS = [
   'annual salary',
   'salary range',
   'w2',
-  'head of',
-  'director of',
-  'vice president',
-  'employee',
   'join our team',
-  'we are hiring',
-];
-
-const STRONG_EMPLOYMENT_TITLE = [
-  'senior engineer',
-  'senior software',
   'staff engineer',
-  'principal engineer',
   'engineering manager',
-  'product engineer',
-  'software engineer',
-  'backend engineer',
-  'frontend engineer',
-  'full stack engineer',
-  'data analyst',
-  'analyst',
-  'drafter',
-  'designer',
-  'manager',
 ];
 
-function hasExplicitFreelanceSignal(signals) {
-  return signals.some((signal) => EXPLICIT_FREELANCE_TERMS.includes(signal));
+function hasAny(text, terms) {
+  return terms.filter((term) => wordMatch(text, term));
 }
 
 export function analyzeEngagementType(opportunity) {
@@ -80,45 +55,35 @@ export function analyzeEngagementType(opportunity) {
   const description = opportunity.description || '';
   const jobType = opportunity.jobType || '';
   const fullText = `${title} ${description} ${jobType}`;
-  const isJobBoard = JOB_BOARD_SOURCES.includes(opportunity.source);
 
-  const freelanceSignals = FREELANCE_TERMS.filter((term) => wordMatch(fullText, term));
-  const employmentSignals = EMPLOYMENT_TERMS.filter((term) => wordMatch(fullText, term));
-  const strongTitleEmployment = STRONG_EMPLOYMENT_TITLE.some((term) =>
-    wordMatch(title, term),
+  const freelanceSignals = hasAny(fullText, [
+    ...EXPLICIT_FREELANCE_TERMS,
+    ...INTENT_FREELANCE_TERMS,
+  ]);
+  const strongEmploymentSignals = hasAny(fullText, STRONG_EMPLOYMENT_TERMS);
+  const explicitFreelance = freelanceSignals.some((s) =>
+    EXPLICIT_FREELANCE_TERMS.includes(s),
   );
 
   let freelanceScore = freelanceSignals.length * 2;
-  let employmentScore = employmentSignals.length * 2;
+  let employmentScore = strongEmploymentSignals.length * 2;
 
   if (opportunity.source === 'reddit') {
-    freelanceScore += 3;
-  }
-
-  if (isJobBoard) {
-    employmentScore += 2;
-  }
-
-  if (strongTitleEmployment && !hasExplicitFreelanceSignal(freelanceSignals)) {
-    employmentScore += 4;
+    freelanceScore += 4;
   }
 
   if (/^\[for hire\]/i.test(title) || /^\[hiring\]/i.test(title)) {
-    freelanceScore += 6;
+    freelanceScore += 8;
   }
 
   let type = 'indefinido';
 
-  if (hasExplicitFreelanceSignal(freelanceSignals)) {
+  if (explicitFreelance || freelanceScore >= 6) {
     type = 'freela';
-  } else if (employmentScore > freelanceScore && employmentScore >= 2) {
+  } else if (strongEmploymentSignals.length >= 1 && !explicitFreelance) {
     type = 'emprego';
-  } else if (opportunity.source === 'reddit' && freelanceScore >= 2) {
+  } else if (opportunity.source === 'reddit') {
     type = 'freela';
-  } else if (isJobBoard) {
-    type = 'emprego';
-  } else if (employmentScore >= 4 || strongTitleEmployment) {
-    type = 'emprego';
   }
 
   return {
@@ -126,6 +91,7 @@ export function analyzeEngagementType(opportunity) {
     freelanceScore,
     employmentScore,
     signals: freelanceSignals,
-    employmentSignals,
+    employmentSignals: strongEmploymentSignals,
+    isStrongEmployment: strongEmploymentSignals.length > 0 && !explicitFreelance,
   };
 }

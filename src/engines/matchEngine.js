@@ -11,7 +11,7 @@ import { wordMatch } from '../utils/textMatch';
 
 function getSourcePriority(source, prioritizeFreela) {
   if (prioritizeFreela) {
-    return { reddit: 15, remoteok: 1, remotive: 1, arbeitnow: 1 }[source] || 0;
+    return { reddit: 15, remoteok: 2, remotive: 2, arbeitnow: 2 }[source] || 0;
   }
   return { reddit: 5, remoteok: 3, remotive: 3, arbeitnow: 3 }[source] || 0;
 }
@@ -34,8 +34,7 @@ function countIncludedMatches(text, includeList) {
 
   for (const tech of includeList) {
     const synonyms = getSynonyms(tech);
-    const inTitle = synonyms.some((syn) => wordMatch(text, syn));
-    if (inTitle) {
+    if (synonyms.some((syn) => wordMatch(text, syn))) {
       matched.push(tech);
       score += 25;
     }
@@ -69,10 +68,11 @@ export function scoreOpportunity(opportunity, params) {
     excludedReason = 'max_age';
   }
 
+  // Só remove emprego "forte" (full-time/CLT/benefits), não tudo que vem de job board
   if (
     !excludedReason &&
     params.excludeFullTime &&
-    engagement.type === 'emprego'
+    engagement.isStrongEmployment
   ) {
     excludedReason = 'full_time_job';
   }
@@ -96,12 +96,20 @@ export function scoreOpportunity(opportunity, params) {
   matchScore += Math.min(titleMatches.score, 40) * 2;
 
   const descMatches = countIncludedMatches(
-    opportunity.description || '',
+    `${opportunity.description || ''} ${(opportunity.technologies || []).join(' ')}`,
     params.includeTech || [],
   );
   matchScore += Math.min(descMatches.score, 30);
 
-  const allMatched = new Set([...titleMatches.matched, ...descMatches.matched, ...technologies]);
+  const allMatched = new Set([
+    ...titleMatches.matched,
+    ...descMatches.matched,
+    ...technologies.filter((tech) =>
+      (params.includeTech || []).some(
+        (include) => include === tech || getSynonyms(include).includes(tech),
+      ),
+    ),
+  ]);
   const hasIncludeMatch = allMatched.size > 0;
 
   if (hasIncludeMatch) {
@@ -117,7 +125,7 @@ export function scoreOpportunity(opportunity, params) {
     if (engagement.type === 'freela') {
       matchScore += 25;
     } else if (engagement.type === 'emprego') {
-      matchScore -= 15;
+      matchScore -= 10;
     }
   }
 
@@ -130,7 +138,6 @@ export function scoreOpportunity(opportunity, params) {
   }
 
   matchScore += getSourcePriority(opportunity.source, params.prioritizeFreela);
-
   matchScore = Math.max(0, Math.min(100, matchScore));
 
   if (params.strictMode && !hasIncludeMatch) {

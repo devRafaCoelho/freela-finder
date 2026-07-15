@@ -1,11 +1,21 @@
 import { DEFAULT_PITCH_TEMPLATE } from '../config/defaultIntentTerms';
 
-const STORAGE_KEY = 'freela-finder-preferences';
+const STORAGE_KEY = 'freela-finder-preferences-v2';
 
 export function loadPreferences() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (raw) return JSON.parse(raw);
+
+    // migra preferências antigas se existirem
+    const legacy = localStorage.getItem('freela-finder-preferences');
+    if (legacy) {
+      const parsed = JSON.parse(legacy);
+      localStorage.setItem(STORAGE_KEY, legacy);
+      return parsed;
+    }
+
+    return null;
   } catch {
     return null;
   }

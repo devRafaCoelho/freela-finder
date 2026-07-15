@@ -92,7 +92,7 @@ describe('matchEngine', () => {
     expect(opportunities).toHaveLength(1);
   });
 
-  it('exclui vaga full-time quando excludeFullTime está ativo', () => {
+  it('exclui só full-time explícito, não qualquer job board', () => {
     const opps = [
       makeOpp({
         id: 'job',
@@ -100,26 +100,40 @@ describe('matchEngine', () => {
         description: 'Benefits, health insurance, join our team',
         url: 'https://example.com/job',
       }),
-    ];
-
-    const { opportunities, stats } = applyMatchEngine(opps, baseParams);
-    expect(opportunities).toHaveLength(0);
-    expect(stats.excludedByEmployment).toBe(1);
-  });
-
-  it('job board sem sinal explícito de freela é tratado como emprego', () => {
-    const opps = [
       makeOpp({
-        id: 'analyst',
-        title: 'Data Analyst Excel',
-        description: 'Remote work with benefits',
-        source: 'remoteok',
-        url: 'https://example.com/analyst',
+        id: 'ok',
+        title: 'Backend Node.js Developer',
+        description: 'Remote contract possible',
+        url: 'https://example.com/ok',
       }),
     ];
 
     const { opportunities, stats } = applyMatchEngine(opps, baseParams);
-    expect(opportunities).toHaveLength(0);
     expect(stats.excludedByEmployment).toBe(1);
+    expect(opportunities.some((o) => o.id === 'ok')).toBe(true);
+  });
+
+  it('prioriza post de freela do Reddit', () => {
+    const opps = [
+      makeOpp({
+        id: 'freela',
+        title: '[Hiring] Freelance Node developer for MVP',
+        description: 'Short term project',
+        source: 'reddit',
+        sourceLabel: 'Reddit r/forhire',
+        url: 'https://reddit.com/1',
+      }),
+      makeOpp({
+        id: 'job',
+        title: 'Backend Node.js Developer',
+        description: 'Remote position',
+        source: 'remoteok',
+        url: 'https://example.com/node-job',
+      }),
+    ];
+
+    const { opportunities } = applyMatchEngine(opps, baseParams);
+    expect(opportunities[0].id).toBe('freela');
+    expect(opportunities[0].engagementType).toBe('freela');
   });
 });
