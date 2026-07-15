@@ -19,6 +19,7 @@ import {
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { MatchTierChip } from '../MatchTierChip/MatchTierChip';
+import { EngagementTypeChip } from '../EngagementTypeChip/EngagementTypeChip';
 import { TechTags } from '../TechTags/TechTags';
 import { copyToClipboard } from '../../../utils/copyToClipboard';
 import { useSnackbar } from 'notistack';
@@ -46,6 +47,7 @@ export function OpportunityTable({ opportunities, pitchTemplate }) {
           <TableRow>
             <TableCell>Título</TableCell>
             <TableCell>Fonte</TableCell>
+            <TableCell>Tipo</TableCell>
             <TableCell>Match</TableCell>
             <TableCell>Stack</TableCell>
             <TableCell>Publicado</TableCell>
@@ -64,6 +66,9 @@ export function OpportunityTable({ opportunities, pitchTemplate }) {
               </TableCell>
               <TableCell>
                 <Chip label={opp.sourceLabel} size="small" />
+              </TableCell>
+              <TableCell>
+                <EngagementTypeChip type={opp.engagementType} signals={opp.freelanceSignals} />
               </TableCell>
               <TableCell>
                 <MatchTierChip tier={opp.tier} score={opp.matchScore} />

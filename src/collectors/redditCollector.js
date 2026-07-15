@@ -1,9 +1,5 @@
 const SUBREDDITS = ['forhire', 'slavelabour', 'freelance', 'brdev'];
 
-function getRedditBaseUrl() {
-  return import.meta.env.DEV ? '/api/reddit' : 'https://www.reddit.com';
-}
-
 function buildRedditQuery(params) {
   const terms = [...(params.intentTerms || []), ...(params.includeTech || [])]
     .slice(0, 4)
@@ -13,12 +9,22 @@ function buildRedditQuery(params) {
     return `${terms} ${params.keyword}`.trim();
   }
 
-  return terms || 'developer';
+  return terms || 'freelance developer';
+}
+
+function getRedditSearchUrl(subreddit, params) {
+  const q = encodeURIComponent(buildRedditQuery(params));
+  const searchParams = `q=${q}&restrict_sr=1&sort=new&t=month&limit=25`;
+
+  if (import.meta.env.DEV) {
+    return `/api/reddit/r/${subreddit}/search.json?${searchParams}`;
+  }
+
+  return `/api/reddit?subreddit=${subreddit}&${searchParams}`;
 }
 
 async function fetchSubreddit(subreddit, params) {
-  const q = encodeURIComponent(buildRedditQuery(params));
-  const url = `${getRedditBaseUrl()}/r/${subreddit}/search.json?q=${q}&restrict_sr=1&sort=new&t=month&limit=25`;
+  const url = getRedditSearchUrl(subreddit, params);
 
   const res = await fetch(url, {
     headers: { Accept: 'application/json' },

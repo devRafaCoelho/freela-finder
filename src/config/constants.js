@@ -1,5 +1,5 @@
 import { DEFAULT_INTENT_TERMS } from './defaultIntentTerms';
-import { SOURCE_IDS } from './sources';
+import { FREELA_FIRST_SOURCE_IDS } from './sources';
 
 export const DEFAULT_SEARCH_VALUES = {
   includeTech: ['node', 'react', 'typescript'],
@@ -7,9 +7,11 @@ export const DEFAULT_SEARCH_VALUES = {
   intentTerms: DEFAULT_INTENT_TERMS,
   keyword: '',
   strictMode: true,
+  prioritizeFreela: true,
+  excludeFullTime: true,
   region: 'remote',
   maxAgeDays: 14,
-  sources: SOURCE_IDS,
+  sources: FREELA_FIRST_SOURCE_IDS,
   minMatchScore: 25,
   pitchTemplate: '',
 };

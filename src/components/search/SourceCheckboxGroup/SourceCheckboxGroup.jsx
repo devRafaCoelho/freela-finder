@@ -1,4 +1,4 @@
-import { FormControl, FormControlLabel, FormGroup, FormLabel, Checkbox } from '@mui/material';
+import { FormControl, FormControlLabel, FormGroup, FormLabel, Checkbox, Typography } from '@mui/material';
 import { SOURCES } from '../../../config/sources';
 
 export function SourceCheckboxGroup({ value, onChange }) {
@@ -13,7 +13,7 @@ export function SourceCheckboxGroup({ value, onChange }) {
   return (
     <FormControl component="fieldset" variant="standard">
       <FormLabel component="legend">Fontes</FormLabel>
-      <FormGroup row>
+      <FormGroup>
         {SOURCES.map((source) => (
           <FormControlLabel
             key={source.id}
@@ -23,7 +23,16 @@ export function SourceCheckboxGroup({ value, onChange }) {
                 onChange={() => toggle(source.id)}
               />
             }
-            label={source.label}
+            label={
+              <span>
+                {source.label}
+                {source.hint && (
+                  <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                    — {source.hint}
+                  </Typography>
+                )}
+              </span>
+            }
           />
         ))}
       </FormGroup>

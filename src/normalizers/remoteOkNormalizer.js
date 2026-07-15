@@ -14,6 +14,7 @@ export function normalizeRemoteOkItem(item) {
     source: 'remoteok',
     sourceLabel: 'RemoteOK',
     publishedAt: item.date || (item.epoch ? new Date(item.epoch * 1000).toISOString() : null),
+    jobType: [item.type, ...(item.tags || [])].filter(Boolean).join(' '),
     technologies: extractTechnologiesFromText(title, description, ...(item.tags || [])),
     intentSignals: [],
     matchScore: 0,

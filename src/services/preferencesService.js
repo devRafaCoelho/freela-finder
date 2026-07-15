@@ -19,6 +19,8 @@ export function savePreferences(prefs) {
       excludeTech: prefs.excludeTech,
       intentTerms: prefs.intentTerms,
       strictMode: prefs.strictMode,
+      prioritizeFreela: prefs.prioritizeFreela,
+      excludeFullTime: prefs.excludeFullTime,
       pitchTemplate: prefs.pitchTemplate || DEFAULT_PITCH_TEMPLATE,
       sources: prefs.sources,
       keyword: prefs.keyword,

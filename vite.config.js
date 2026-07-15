@@ -2,10 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const REPO_NAME = 'freela-finder';
+const isVercel = process.env.VERCEL === '1';
 
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: mode === 'production' ? `/${REPO_NAME}/` : '/',
+  base: isVercel || mode !== 'production' ? '/' : `/${REPO_NAME}/`,
   server: {
     port: 5174,
     proxy: {

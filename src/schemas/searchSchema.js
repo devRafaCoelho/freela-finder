@@ -10,6 +10,8 @@ export const searchSchema = yup.object({
   intentTerms: yup.array().of(yup.string().trim()),
   keyword: yup.string().trim(),
   strictMode: yup.boolean().default(true),
+  prioritizeFreela: yup.boolean().default(true),
+  excludeFullTime: yup.boolean().default(true),
   region: yup.string().nullable(),
   maxAgeDays: yup.number().min(1).max(90).default(14),
   sources: yup.array().of(yup.string()),

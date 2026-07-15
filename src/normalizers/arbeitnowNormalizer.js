@@ -14,6 +14,7 @@ export function normalizeArbeitnowItem(item) {
     source: 'arbeitnow',
     sourceLabel: 'Arbeitnow',
     publishedAt: item.created_at || null,
+    jobType: item.job_types?.join(' ') || item.remote || '',
     technologies: extractTechnologiesFromText(title, description, item.tags?.join(' ') || ''),
     intentSignals: [],
     matchScore: 0,

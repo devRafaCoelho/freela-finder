@@ -14,6 +14,7 @@ export function normalizeRemotiveItem(item) {
     source: 'remotive',
     sourceLabel: 'Remotive',
     publishedAt: item.publication_date || null,
+    jobType: [item.job_type, ...(item.tags || [])].filter(Boolean).join(' '),
     technologies: extractTechnologiesFromText(title, description, item.tags || item.job_type || ''),
     intentSignals: [],
     matchScore: 0,

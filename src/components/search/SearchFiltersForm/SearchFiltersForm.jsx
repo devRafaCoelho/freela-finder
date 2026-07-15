@@ -63,6 +63,24 @@ export function SearchFiltersForm({ form, onSubmit, loading }) {
         <FormControlLabel
           control={
             <Switch
+              checked={values.prioritizeFreela}
+              onChange={(e) => setValue('prioritizeFreela', e.target.checked)}
+            />
+          }
+          label="Priorizar freela (pontua contratos e pedidos informais)"
+        />
+        <FormControlLabel
+          control={
+            <Switch
+              checked={values.excludeFullTime}
+              onChange={(e) => setValue('excludeFullTime', e.target.checked)}
+            />
+          }
+          label="Excluir vagas CLT / full-time"
+        />
+        <FormControlLabel
+          control={
+            <Switch
               checked={values.strictMode}
               onChange={(e) => setValue('strictMode', e.target.checked)}
             />

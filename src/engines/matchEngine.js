@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import { dedupeByUrl } from './dedupe';
 import { getSynonyms } from './techSynonyms';
+import { analyzeEngagementType } from './freelanceSignals';
 import {
   detectIntentSignals,
   extractTechnologiesFromText,
@@ -8,12 +9,12 @@ import {
 } from '../utils/techExtract';
 import { wordMatch } from '../utils/textMatch';
 
-const SOURCE_PRIORITY = {
-  reddit: 5,
-  remoteok: 3,
-  remotive: 3,
-  arbeitnow: 3,
-};
+function getSourcePriority(source, prioritizeFreela) {
+  if (prioritizeFreela) {
+    return { reddit: 15, remoteok: 1, remotive: 1, arbeitnow: 1 }[source] || 0;
+  }
+  return { reddit: 5, remoteok: 3, remotive: 3, arbeitnow: 3 }[source] || 0;
+}
 
 function toTier(score) {
   if (score >= 75) return 'high';
@@ -57,6 +58,7 @@ export function scoreOpportunity(opportunity, params) {
     ...(opportunity.technologies || []),
   );
 
+  const engagement = analyzeEngagementType(opportunity);
   let excludedReason = null;
 
   if (containsExcludedTech(fullText, params.excludeTech || [])) {
@@ -67,10 +69,20 @@ export function scoreOpportunity(opportunity, params) {
     excludedReason = 'max_age';
   }
 
+  if (
+    !excludedReason &&
+    params.excludeFullTime &&
+    engagement.type === 'emprego'
+  ) {
+    excludedReason = 'full_time_job';
+  }
+
   if (excludedReason) {
     return {
       ...opportunity,
       technologies,
+      engagementType: engagement.type,
+      freelanceSignals: engagement.signals,
       intentSignals: detectIntentSignals(opportunity, params.intentTerms || []),
       matchScore: 0,
       tier: 'low',
@@ -101,6 +113,14 @@ export function scoreOpportunity(opportunity, params) {
     matchScore += 20;
   }
 
+  if (params.prioritizeFreela) {
+    if (engagement.type === 'freela') {
+      matchScore += 25;
+    } else if (engagement.type === 'emprego') {
+      matchScore -= 15;
+    }
+  }
+
   if (params.keyword && wordMatch(fullText, params.keyword)) {
     matchScore += 10;
   }
@@ -109,9 +129,9 @@ export function scoreOpportunity(opportunity, params) {
     matchScore += 10;
   }
 
-  matchScore += SOURCE_PRIORITY[opportunity.source] || 0;
+  matchScore += getSourcePriority(opportunity.source, params.prioritizeFreela);
 
-  matchScore = Math.min(100, matchScore);
+  matchScore = Math.max(0, Math.min(100, matchScore));
 
   if (params.strictMode && !hasIncludeMatch) {
     excludedReason = 'no_include_match';
@@ -120,6 +140,8 @@ export function scoreOpportunity(opportunity, params) {
   return {
     ...opportunity,
     technologies: [...allMatched],
+    engagementType: engagement.type,
+    freelanceSignals: engagement.signals,
     intentSignals,
     matchScore,
     tier: toTier(matchScore),
@@ -133,6 +155,7 @@ export function applyMatchEngine(opportunities, params) {
     afterDedupe: 0,
     excludedByTech: 0,
     excludedByAge: 0,
+    excludedByEmployment: 0,
     excludedByScore: 0,
     finalCount: 0,
     sourceErrors: [],
@@ -150,6 +173,10 @@ export function applyMatchEngine(opportunities, params) {
       }
       if (opp.excludedReason === 'max_age') {
         stats.excludedByAge++;
+        return false;
+      }
+      if (opp.excludedReason === 'full_time_job') {
+        stats.excludedByEmployment++;
         return false;
       }
       if (opp.excludedReason === 'no_include_match') {

@@ -1,6 +1,44 @@
-# Freela Finder — Deploy no GitHub Pages
+# Freela Finder — Deploy
+
+Guia de publicação do app (React + Vite).
+
+> **Recomendado:** [Vercel](#deploy-no-vercel-recomendado) — suporta proxy do Reddit e deploy mais simples.  
+> **Alternativa:** [GitHub Pages](#deploy-no-github-pages) — estático puro; Reddit não funciona.
+
+---
+
+## Deploy no Vercel (recomendado)
+
+### Por que Vercel é melhor para este projeto
+
+| Recurso | GitHub Pages | Vercel |
+|---------|--------------|--------|
+| Site estático | Sim | Sim |
+| API proxy (`/api/reddit`) | Não | **Sim** |
+| Reddit em produção | Falha (CORS) | **Funciona** |
+| Deploy automático | Sim | Sim |
+| URL | `usuario.github.io/repo/` | `projeto.vercel.app` |
+
+### Passos
+
+1. Acesse [vercel.com](https://vercel.com) e conecte o repo `devRafaCoelho/freela-finder`
+2. Framework: **Vite** (detectado automaticamente)
+3. Build: `npm run build` · Output: `dist`
+4. Deploy
+
+O arquivo `vercel.json` e `api/reddit.js` já estão no projeto — o proxy do Reddit funciona sem config extra.
+
+### URL após deploy
+
+`https://freela-finder-*.vercel.app` (ou domínio customizado)
+
+---
+
+## Deploy no GitHub Pages
 
 Guia para publicar a v1 (React + Vite, 100% estático) no **GitHub Pages** com deploy automático via GitHub Actions.
+
+**Limitação:** sem serverless, o Reddit falha em produção. Job boards continuam funcionando.
 
 ---
 
