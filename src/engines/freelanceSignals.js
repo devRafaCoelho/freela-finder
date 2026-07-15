@@ -1,31 +1,34 @@
 import { wordMatch } from '../utils/textMatch';
 
-const FREELANCE_TERMS = [
+const JOB_BOARD_SOURCES = ['remoteok', 'remotive', 'arbeitnow'];
+
+const EXPLICIT_FREELANCE_TERMS = [
   'freelance',
   'freelancer',
   'freela',
   'contractor',
-  'contract',
   'part-time',
   'part time',
   'gig',
   'project based',
   'por projeto',
   'pj',
+  'for hire',
+  'short term',
+  'hourly',
+  'por hora',
+];
+
+const FREELANCE_TERMS = [
+  ...EXPLICIT_FREELANCE_TERMS,
   'preciso de dev',
   'preciso de um dev',
   'preciso de desenvolvedor',
   'busco desenvolvedor',
   'busco dev',
   'contratar programador',
-  'for hire',
-  '[hiring]',
-  'hiring',
   'consultoria',
   'mvp',
-  'short term',
-  'hourly',
-  'por hora',
 ];
 
 const EMPLOYMENT_TERMS = [
@@ -61,13 +64,23 @@ const STRONG_EMPLOYMENT_TITLE = [
   'backend engineer',
   'frontend engineer',
   'full stack engineer',
+  'data analyst',
+  'analyst',
+  'drafter',
+  'designer',
+  'manager',
 ];
+
+function hasExplicitFreelanceSignal(signals) {
+  return signals.some((signal) => EXPLICIT_FREELANCE_TERMS.includes(signal));
+}
 
 export function analyzeEngagementType(opportunity) {
   const title = opportunity.title || '';
   const description = opportunity.description || '';
   const jobType = opportunity.jobType || '';
   const fullText = `${title} ${description} ${jobType}`;
+  const isJobBoard = JOB_BOARD_SOURCES.includes(opportunity.source);
 
   const freelanceSignals = FREELANCE_TERMS.filter((term) => wordMatch(fullText, term));
   const employmentSignals = EMPLOYMENT_TERMS.filter((term) => wordMatch(fullText, term));
@@ -82,23 +95,29 @@ export function analyzeEngagementType(opportunity) {
     freelanceScore += 3;
   }
 
-  if (strongTitleEmployment && freelanceSignals.length === 0) {
-    employmentScore += 3;
+  if (isJobBoard) {
+    employmentScore += 2;
+  }
+
+  if (strongTitleEmployment && !hasExplicitFreelanceSignal(freelanceSignals)) {
+    employmentScore += 4;
   }
 
   if (/^\[for hire\]/i.test(title) || /^\[hiring\]/i.test(title)) {
-    freelanceScore += 4;
+    freelanceScore += 6;
   }
 
   let type = 'indefinido';
 
-  if (freelanceScore > employmentScore && freelanceScore >= 2) {
+  if (hasExplicitFreelanceSignal(freelanceSignals)) {
     type = 'freela';
   } else if (employmentScore > freelanceScore && employmentScore >= 2) {
     type = 'emprego';
-  } else if (freelanceScore >= 2) {
+  } else if (opportunity.source === 'reddit' && freelanceScore >= 2) {
     type = 'freela';
-  } else if (employmentScore >= 4 || (strongTitleEmployment && employmentScore >= 2)) {
+  } else if (isJobBoard) {
+    type = 'emprego';
+  } else if (employmentScore >= 4 || strongTitleEmployment) {
     type = 'emprego';
   }
 

@@ -49,7 +49,7 @@ describe('matchEngine', () => {
     const opps = [
       makeOpp({
         id: 'node',
-        title: 'Backend Node.js Developer',
+        title: 'Freelance Backend Node.js Developer',
         url: 'https://example.com/node',
       }),
     ];
@@ -65,6 +65,8 @@ describe('matchEngine', () => {
         id: 'generic',
         title: 'Preciso de um dev para meu projeto',
         description: 'Me chama no WhatsApp',
+        source: 'reddit',
+        sourceLabel: 'Reddit r/forhire',
         url: 'https://example.com/generic',
       }),
     ];
@@ -105,31 +107,19 @@ describe('matchEngine', () => {
     expect(stats.excludedByEmployment).toBe(1);
   });
 
-  it('prioriza post de freela do Reddit', () => {
+  it('job board sem sinal explícito de freela é tratado como emprego', () => {
     const opps = [
       makeOpp({
-        id: 'freela',
-        title: '[Hiring] Freelance Node developer for MVP',
-        description: 'Short term project',
-        source: 'reddit',
-        sourceLabel: 'Reddit r/forhire',
-        url: 'https://reddit.com/1',
-      }),
-      makeOpp({
-        id: 'job',
-        title: 'Backend Node.js Developer',
-        description: 'Full-time remote position',
+        id: 'analyst',
+        title: 'Data Analyst Excel',
+        description: 'Remote work with benefits',
         source: 'remoteok',
-        url: 'https://example.com/node-job',
+        url: 'https://example.com/analyst',
       }),
     ];
 
-    const { opportunities } = applyMatchEngine(
-      opps,
-      { ...baseParams, excludeFullTime: false },
-    );
-
-    expect(opportunities[0].id).toBe('freela');
-    expect(opportunities[0].engagementType).toBe('freela');
+    const { opportunities, stats } = applyMatchEngine(opps, baseParams);
+    expect(opportunities).toHaveLength(0);
+    expect(stats.excludedByEmployment).toBe(1);
   });
 });

@@ -16,8 +16,8 @@ export function SourceErrorAlert({ errors }) {
         ))}
         {hasRedditError && (
           <Typography variant="body2" sx={{ mt: 1 }}>
-            Reddit precisa de proxy serverless. No GitHub Pages ele não funciona — use Vercel para
-            habilitar essa fonte.
+            O Reddit costuma bloquear acesso direto (HTTP 403). O app tenta um fallback
+            automático; se persistir, desmarque Reddit e use as outras fontes.
           </Typography>
         )}
       </Alert>
